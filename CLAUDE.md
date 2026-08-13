@@ -160,3 +160,61 @@ catching you out, a fact about the stack the agent keeps getting wrong --- write
 it down here. Growing this file is the work of harness engineering, and the gap
 between this boilerplate and your own version is part of what your prototype
 says about the developer you're becoming.
+
+## Assignment 1 — Almost Full Is Already Broken
+
+### Scope
+
+- One idea: systems become painfully slow as demand approaches capacity.
+- One core interaction: the visitor changes arrival demand and watches the
+  queue/wait response.
+- Do not turn this into a cafe-management game.
+- Do not add staffing, menus, money, upgrades, levels, accounts, multiple
+  stores or unrelated controls.
+
+### Model integrity
+
+- Use the M/M/1 steady-state queue model for the explanatory mechanic.
+- The main queue metric is queue-only waiting time Wq = λ / [μ(μ − λ)] for
+  λ < μ.
+- λ >= μ has no finite steady-state queue wait; represent that state
+  explicitly rather than pretending to calculate a finite value.
+- Never confuse queue-only wait Wq with total time in system W.
+- Do not describe Wq as coming directly from Little's Law.
+- Do not invent or imply measured "average cafe" statistics.
+- Prefer explaining visitor input as demand/utilisation relative to service
+  capacity rather than presenting arbitrary real-world customers-per-minute
+  numbers.
+- Keep model constants named and centralised; no unexplained magic numbers.
+- Any displayed number must have a clear unit or be explicitly described as
+  relative/illustrative.
+
+### Interaction
+
+- The slider must work with mouse, touch and keyboard.
+- Do not make drag the only way to use the explainer.
+- The live result must update immediately when the control changes.
+- Essential meaning must not depend on colour, animation or hover.
+- The interaction state must survive viewport resizing.
+- Provide a clear reset only if it genuinely helps the one mechanic.
+
+### Accessibility and resilience
+
+- Must work at 390x844 and 1920x1080.
+- No horizontal overflow at the mobile marking viewport.
+- Visible focus states.
+- Accessible labels for interactive controls.
+- queue-status must use an appropriate aria-live strategy without creating
+  excessive announcements.
+- Respect prefers-reduced-motion.
+- The static explanation must remain understandable if animation is reduced
+  or unavailable.
+
+### Agent behaviour
+
+- Verify formulas and numerical claims before accepting them.
+- If a model/test/design assumption is wrong, correct the rule or test before
+  retrying implementation.
+- Do not modify course-provided invariant tests to make implementation pass.
+- Run the relevant checks before declaring a stage complete.
+- Do not silently broaden scope.
