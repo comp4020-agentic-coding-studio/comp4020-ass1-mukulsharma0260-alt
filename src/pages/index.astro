@@ -1,66 +1,103 @@
 ---
 import Layout from "../layouts/Layout.astro";
+
+const heroImage = `${import.meta.env.BASE_URL.replace(/\/?$/, "/")}images/cafe-capacity.webp`;
 ---
 
 <Layout title="Almost Full Is Already Broken">
-  <h1>Almost Full Is Already Broken</h1>
-  <p>
-    A system can become painfully slow before it is technically full. Move
-    the demand slider and watch what happens.
-  </p>
+  <link slot="head" rel="preload" as="image" href={heroImage} />
 
-  <section class="control">
-    <label for="arrival-rate">Demand, as a percentage of service capacity</label>
-    <input
-      id="arrival-rate"
-      data-testid="arrival-rate"
-      type="range"
-      min="10"
-      max="99"
-      step="1"
-      value="50"
-      aria-describedby="demand-readout"
-    />
-    <p id="demand-readout">Demand: <span id="demand-percent">50</span>% of capacity</p>
-  </section>
-
-  <section data-testid="queue-status" aria-live="polite" class="queue-status">
-    <p class="queue-status-label">Expected queue wait</p>
-    <p class="queue-status-value"><span id="wait-multiple">1</span>× one service time</p>
-  </section>
-
-  <section class="pressure">
-    <p id="pressure-label">Queue pressure</p>
-    <div class="pressure-track" role="img" aria-labelledby="pressure-label">
-      <div id="pressure-fill" class="pressure-fill"></div>
+  <section class="hero">
+    <div class="scene-backdrop" style={`--cafe-image: url("${heroImage}")`} aria-hidden="true"></div>
+    <div class="hero-copy">
+      <h1 class="hero-title">Almost full<br />is already broken</h1>
+      <p class="hero-sub">
+        A system can become painfully slow before it is technically full.
+      </p>
     </div>
   </section>
 
-  <p id="insight-message" class="insight">There is plenty of headroom.</p>
+  <section class="scene">
+    <div class="scene-backdrop" style={`--cafe-image: url("${heroImage}")`} aria-hidden="true"></div>
 
-  <p class="model-note">
-    This is a simplified M/M/1 explanatory model, not measured cafe data.
-  </p>
+    <div class="queue-overlay" aria-hidden="true">
+      <div class="figure"></div>
+      <div class="figure"></div>
+      <div class="figure"></div>
+      <div class="figure"></div>
+      <div class="figure"></div>
+      <div class="figure"></div>
+      <div class="figure"></div>
+      <div class="figure"></div>
+      <div class="figure"></div>
+      <div class="figure"></div>
+    </div>
+
+    <div class="scene-metrics">
+      <p id="demand-readout" class="metric metric-demand">
+        <span id="demand-percent">50</span><span class="metric-symbol">%</span>
+        <span class="metric-label">demand</span>
+      </p>
+      <div data-testid="queue-status" aria-live="polite" class="metric metric-wait">
+        <span id="wait-multiple">1</span><span class="metric-symbol">×</span>
+        <span class="metric-label">expected queue wait, one service time</span>
+      </div>
+    </div>
+
+    <div class="scene-control">
+      <label for="arrival-rate" class="visually-hidden">Demand, as a percentage of service capacity</label>
+      <input
+        id="arrival-rate"
+        data-testid="arrival-rate"
+        type="range"
+        min="10"
+        max="99"
+        step="1"
+        value="50"
+        aria-describedby="demand-readout"
+      />
+    </div>
+
+    <p id="insight-message" class="insight">There's plenty of room for variation.</p>
+
+    <p class="illustration-caption">
+      The queue figures are an illustrative encoding of queue pressure, not a
+      literal customer count — the number that matters is the readout above.
+    </p>
+  </section>
+
+  <section class="model-note">
+    <h2 class="model-note-title">Almost full<br />isn't almost fine.</h2>
+    <p>
+      This is a simplified M/M/1 queue: one service point, random arrivals,
+      and random service times. It is an explanatory model, not measured
+      cafe data.
+    </p>
+    <p>
+      1× means waiting for the equivalent of one average service-time unit
+      before service begins.
+    </p>
+  </section>
 </Layout>
 
 <script>
   import { expectedQueueWaitTime } from "../lib/queueModel";
 
   // mu = 1: the model is expressed relative to one unit of service
-  // capacity, so the slider's demand percentage is arrivalRate directly
-  // (see CLAUDE.md > Model integrity: demand relative to capacity, not
-  // invented customers-per-minute figures).
+  // capacity, so the slider's demand percentage is arrivalRate directly.
   const SERVICE_RATE = 1;
 
-  // Display-only scaling for the queue-pressure bar: maps the unbounded
-  // wait (in multiples of one service time) onto a 0-100% width so the bar
-  // never overflows, while still growing fastest as demand nears capacity.
-  // This is not part of the model — the model itself returns the wait
-  // unscaled; queueModel.ts owns the formula, this file only formats it.
-  const PRESSURE_HALF_SCALE = 4;
+  // Display-only saturating scale mapping the unbounded wait multiple onto
+  // a 0-1 pressure fraction. Not part of the model.
+  const WAIT_SATURATION_SCALE = 4;
 
-  function pressurePercent(waitMultiple: number): number {
-    return (waitMultiple / (waitMultiple + PRESSURE_HALF_SCALE)) * 100;
+  // Decorative cap on illustrated queue figures. Not a claim about how many
+  // customers are waiting — expectedQueueWaitTime() never returns a
+  // headcount, only a wait time.
+  const FIGURE_COUNT = 10;
+
+  function queuePressureFraction(waitMultiple: number): number {
+    return waitMultiple / (waitMultiple + WAIT_SATURATION_SCALE);
   }
 
   function formatMultiple(waitMultiple: number): string {
@@ -69,29 +106,60 @@ import Layout from "../layouts/Layout.astro";
   }
 
   function insightFor(demandPercent: number): string {
+    if (demandPercent >= 98) {
+      return "The queue is still mathematically stable in this simplified model, but almost no buffer remains.";
+    }
     if (demandPercent >= 95) return "Almost full is already painful.";
-    if (demandPercent >= 90) return "Small increases now create much larger waits.";
-    if (demandPercent >= 80) return "The system is still stable, but the buffer is disappearing.";
-    return "There is plenty of headroom.";
+    if (demandPercent >= 90) return "A small increase in demand now creates a much larger wait.";
+    if (demandPercent >= 80) return "The buffer is disappearing.";
+    return "There's plenty of room for variation.";
+  }
+
+  // Display-only state classes on the interactive scene, mirroring the same
+  // tier boundaries as insightFor(). Not a new mathematical threshold.
+  const PRESSURE_STATES = [
+    "pressure-low",
+    "pressure-medium",
+    "pressure-high",
+    "pressure-critical",
+    "pressure-near-full",
+  ];
+
+  function pressureStateFor(demandPercent: number): string {
+    if (demandPercent >= 98) return "pressure-near-full";
+    if (demandPercent >= 95) return "pressure-critical";
+    if (demandPercent >= 90) return "pressure-high";
+    if (demandPercent >= 80) return "pressure-medium";
+    return "pressure-low";
   }
 
   const slider = document.querySelector<HTMLInputElement>('[data-testid="arrival-rate"]');
   const demandLabel = document.querySelector<HTMLElement>("#demand-percent");
   const waitLabel = document.querySelector<HTMLElement>("#wait-multiple");
-  const pressureFill = document.querySelector<HTMLElement>("#pressure-fill");
   const insight = document.querySelector<HTMLElement>("#insight-message");
+  const scene = document.querySelector<HTMLElement>(".scene");
+  const figures = document.querySelectorAll<HTMLElement>(".queue-overlay .figure");
 
   function render() {
-    if (!slider || !demandLabel || !waitLabel || !pressureFill || !insight) return;
+    if (!slider || !demandLabel || !waitLabel || !insight || !scene) return;
 
     const demandPercent = Number(slider.value);
     const arrivalRate = demandPercent / 100;
     const waitMultiple = expectedQueueWaitTime(arrivalRate, SERVICE_RATE);
+    const pressure = queuePressureFraction(waitMultiple);
 
     demandLabel.textContent = String(demandPercent);
     waitLabel.textContent = formatMultiple(waitMultiple);
-    pressureFill.style.width = `${pressurePercent(waitMultiple)}%`;
     insight.textContent = insightFor(demandPercent);
+    scene.style.setProperty("--pressure", String(pressure));
+
+    scene.classList.remove(...PRESSURE_STATES);
+    scene.classList.add(pressureStateFor(demandPercent));
+
+    const figuresVisible = Math.round(pressure * FIGURE_COUNT);
+    figures.forEach((figure, index) => {
+      figure.classList.toggle("is-active", index < figuresVisible);
+    });
   }
 
   // Only the 'input' event drives a re-render, so the live region announces
