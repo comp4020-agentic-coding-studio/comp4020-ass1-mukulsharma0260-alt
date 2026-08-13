@@ -2,10 +2,100 @@
 import Layout from "../layouts/Layout.astro";
 ---
 
-<Layout title="COMP4020 prototype">
-  <h1>COMP4020 prototype</h1>
-  <p data-testid="intro">
-    Replace this with your prototype. This week's brief is on the course website;
-    <code>spec/README.md</code> explains how the checks in this repo relate to it.
+<Layout title="Almost Full Is Already Broken">
+  <h1>Almost Full Is Already Broken</h1>
+  <p>
+    A system can become painfully slow before it is technically full. Move
+    the demand slider and watch what happens.
+  </p>
+
+  <section class="control">
+    <label for="arrival-rate">Demand, as a percentage of service capacity</label>
+    <input
+      id="arrival-rate"
+      data-testid="arrival-rate"
+      type="range"
+      min="10"
+      max="99"
+      step="1"
+      value="50"
+      aria-describedby="demand-readout"
+    />
+    <p id="demand-readout">Demand: <span id="demand-percent">50</span>% of capacity</p>
+  </section>
+
+  <section data-testid="queue-status" aria-live="polite" class="queue-status">
+    <p class="queue-status-label">Expected queue wait</p>
+    <p class="queue-status-value"><span id="wait-multiple">1</span>× one service time</p>
+  </section>
+
+  <section class="pressure">
+    <p id="pressure-label">Queue pressure</p>
+    <div class="pressure-track" role="img" aria-labelledby="pressure-label">
+      <div id="pressure-fill" class="pressure-fill"></div>
+    </div>
+  </section>
+
+  <p id="insight-message" class="insight">There is plenty of headroom.</p>
+
+  <p class="model-note">
+    This is a simplified M/M/1 explanatory model, not measured cafe data.
   </p>
 </Layout>
+
+<script>
+  import { expectedQueueWaitTime } from "../lib/queueModel";
+
+  // mu = 1: the model is expressed relative to one unit of service
+  // capacity, so the slider's demand percentage is arrivalRate directly
+  // (see CLAUDE.md > Model integrity: demand relative to capacity, not
+  // invented customers-per-minute figures).
+  const SERVICE_RATE = 1;
+
+  // Display-only scaling for the queue-pressure bar: maps the unbounded
+  // wait (in multiples of one service time) onto a 0-100% width so the bar
+  // never overflows, while still growing fastest as demand nears capacity.
+  // This is not part of the model — the model itself returns the wait
+  // unscaled; queueModel.ts owns the formula, this file only formats it.
+  const PRESSURE_HALF_SCALE = 4;
+
+  function pressurePercent(waitMultiple: number): number {
+    return (waitMultiple / (waitMultiple + PRESSURE_HALF_SCALE)) * 100;
+  }
+
+  function formatMultiple(waitMultiple: number): string {
+    const rounded = Math.round(waitMultiple * 10) / 10;
+    return rounded % 1 === 0 ? String(rounded) : rounded.toFixed(1);
+  }
+
+  function insightFor(demandPercent: number): string {
+    if (demandPercent >= 95) return "Almost full is already painful.";
+    if (demandPercent >= 90) return "Small increases now create much larger waits.";
+    if (demandPercent >= 80) return "The system is still stable, but the buffer is disappearing.";
+    return "There is plenty of headroom.";
+  }
+
+  const slider = document.querySelector<HTMLInputElement>('[data-testid="arrival-rate"]');
+  const demandLabel = document.querySelector<HTMLElement>("#demand-percent");
+  const waitLabel = document.querySelector<HTMLElement>("#wait-multiple");
+  const pressureFill = document.querySelector<HTMLElement>("#pressure-fill");
+  const insight = document.querySelector<HTMLElement>("#insight-message");
+
+  function render() {
+    if (!slider || !demandLabel || !waitLabel || !pressureFill || !insight) return;
+
+    const demandPercent = Number(slider.value);
+    const arrivalRate = demandPercent / 100;
+    const waitMultiple = expectedQueueWaitTime(arrivalRate, SERVICE_RATE);
+
+    demandLabel.textContent = String(demandPercent);
+    waitLabel.textContent = formatMultiple(waitMultiple);
+    pressureFill.style.width = `${pressurePercent(waitMultiple)}%`;
+    insight.textContent = insightFor(demandPercent);
+  }
+
+  // Only the 'input' event drives a re-render, so the live region announces
+  // once per change, not continuously.
+  slider?.addEventListener("input", render);
+  render();
+</script>
