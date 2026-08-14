@@ -344,7 +344,7 @@ input[type="range"]:focus-visible {
 
   .scene-control {
     position: absolute;
-    bottom: 5rem;
+    bottom: 6.5rem;
     left: 4rem;
     max-width: 30rem;
   }
