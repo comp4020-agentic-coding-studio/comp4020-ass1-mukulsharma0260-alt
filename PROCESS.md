@@ -1,85 +1,21 @@
-# Process overview
+# Assignment 1 Process
 
-<!-- TEMPLATE: this file is a shape to fill in, not a form. Replace everything
-     in it with your own overview, and delete this comment — `pnpm
-     check:evidence` will remind you if it's still here. -->
+## Overview
 
-A reading-guide to how the work came together --- a map to your process, not an
-essay about it. Markers read this file and follow its citations; they don't
-trawl the repo for evidence you didn't point at, so if a moment mattered, cite
-it.
+I built **Almost Full Is Already Broken**, an interactive explainer showing why a service system can feel broken before it is technically at full capacity. The final interaction uses one demand slider and a simplified M/M/1 queue model. My main process focus was not adding features, but making the model, interaction, and presentation trustworthy across the exact marking viewports.
 
-This file is the shape; the course site's
-[assessment page](https://comp.anu.edu.au/courses/comp4020-agentic-coding-studio/topics/assessment/#what-you-submit)
-is the requirement, and its
-[word counts](https://comp.anu.edu.au/courses/comp4020-agentic-coding-studio/topics/assessment/#word-counts)
-cover every deliverable.
+## Moment 1 — Correcting the queue model before building the interface
 
-## What I built
+My first model used the M/M/1 total time in system, `1 / (μ − λ)`, while I was describing the result as queue wait. That created a conceptual mismatch and also made my planned "95% is more than 10× worse than 50%" claim false: with that formula the ratio was exactly 10×. Instead of changing the wording to fit the implementation, I corrected the harness and tests first. I switched to queue-only waiting time, `Wq = λ / [μ(μ − λ)]`, and rewrote the tests around known checkpoints: 50% → 1×, 80% → 4×, 90% → 9×, 95% → 19×, 99% → 99×. I knew the correction was right because the model tests passed against those values and the terminology in the code now matched what the interface claimed. This model-and-harness checkpoint is captured in commit [`33ffb19`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-mukulsharma0260-alt/commit/33ffb19).
 
-One paragraph: the thing, and the idea behind it.
+## Moment 2 — Letting the tests fail before implementing the interaction
 
-## The moments that mattered
+I deliberately wrote the Assignment 1 model and DOM tests before the final interface existed. The obvious shortcut would have been to build the slider first and then write tests that matched whatever I had already made. Instead, I used failing tests as the contract: exactly one native range input, one live queue-status region, and model outputs derived from the queue function rather than hard-coded display values. Once the minimal explainer was implemented, the Assignment 1 tests passed 6/6 and the full project suite passed 27/27. That gave me evidence that the interaction satisfied the brief before I spent time polishing the visuals. The working interactive checkpoint is commit [`d598560`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-mukulsharma0260-alt/commit/d598560).
 
-Three or four for an assignment; fewer is fine for a weekly prototype. Keep the
-list short so each moment has room to do all four jobs:
+## Moment 3 — Changing my workflow after repeated bad agent edits
 
-1. **what happened** --- the problem, or the thing the agent got wrong
-2. **what you did instead of the obvious thing** --- the call you made, and why
-   it beat the obvious one
-3. **how you knew it was right** --- the check you ran, the viewport you looked
-   at, what you read before accepting the diff
-4. **the citation** --- a commit or commit range, a `CLAUDE.md` change, a check
-   that went from red to green, a prompt paired with the commit it produced
+During the cinematic redesign, several proposed agent writes contained duplicated markup, old and new IDs together, incomplete functions, or malformed CSS. The obvious response would have been to keep accepting edits and repair the repo afterward. Instead, I stopped writing directly into the project and moved risky changes into `/tmp` files. I inspected them with targeted `grep` checks, stylelint, brace/selector checks, and only copied them into `src/` after the temporary versions were clean. I also rejected a deprecated `clip` rule and replaced it with `clip-path: inset(50%)` before copying the CSS. After the verified files were copied, `git diff --check`, Astro check, build, lint, and all 27 tests passed. The resulting cinematic implementation is commit [`99a06ee`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-mukulsharma0260-alt/commit/99a06ee).
 
-Jobs 2 and 3 are the ones the repo can't tell a reader on its own, so they're
-where the marks are. The strongest moments are the ones where a correction
-landed in the **harness** rather than in another prompt --- a rule added to
-`CLAUDE.md`, a check wired up, an attempt thrown away: re-prompting until it
-passes is the routine case, and changing what the agent works against is the
-skilled one.
+## Moment 4 — Testing the real deployment conditions, not just localhost appearance
 
-Cite each moment as a link whose text is the commit hash or range and whose
-target is this repo's commit or compare URL, so a reader clicks straight to the
-evidence:
-
-- one commit: [`a1b2c3d`](https://github.com/YOUR-ORG/YOUR-REPO/commit/a1b2c3d)
-- a range:
-  [`a1b2c3d...e4f5a6b`](https://github.com/YOUR-ORG/YOUR-REPO/compare/a1b2c3d...e4f5a6b)
-
-To pair a prompt with the commit it produced, quote the prompt (curated, not a
-full transcript) next to the citation:
-
-> the prompt, verbatim
-
-Screenshots are welcome where one carries the verification better than a
-sentence does. Commit the file to this repo and link it with a **relative**
-path, which is what makes it render on GitHub: `![alt text](docs/before.png)`.
-Images don't count towards the word count and don't replace the citation.
-
-### A worked moment, for shape
-
-Delete this section along with the rest of the boilerplate --- it's here to show
-the four jobs in one paragraph, not to be imitated in content.
-
-> The date formatter kept coming back with `toLocaleDateString()` and no locale
-> argument, so the same build rendered differently on my machine and in CI. I'd
-> already re-prompted it twice, which fixed the line but not the habit, so the
-> third time I put the rule in `CLAUDE.md` instead
-> ([`3f9ac21`](https://github.com/YOUR-ORG/YOUR-REPO/commit/3f9ac21)) and added
-> a spec test that fails on a bare `toLocaleDateString`. That's what told me it
-> had actually taken: the test went red against the old code and green against
-> the new, and the next two features it wrote passed it without prompting
-> ([`3f9ac21...b7e0d14`](https://github.com/YOUR-ORG/YOUR-REPO/compare/3f9ac21...b7e0d14)).
-
-## Before you ship
-
-`pnpm check:evidence` verifies your citations resolve to real commits, that the
-current reflection entry is in `reflections/`, and that your `CLAUDE.md` is
-there --- before a marker ever opens the file. It checks that your map is
-traceable, not that it is good: the marker judges whether your small,
-deliberately chosen set of moments shows real judgement and reflection. A green
-check is not a substitute for that curation.
-
-Images are deliberately not checked, because whether one renders is visible the
-moment you look. Open this file on GitHub and look at it before you ship.
+The final visual pass exposed two problems that normal code checks did not catch. First, the café image path became `...-altimages/...` because `BASE_URL` did not include a trailing slash. I traced Astro's actual base-path behaviour and normalized the path before adding the asset. Second, the original mobile `right center` crop hid the service counter. I compared 15%, 25%, and 35% crops at the exact 390×844 marking viewport and chose 25% because it kept the counter visible while preserving headline readability. I then verified 390×844 and 1920×1080, zero horizontal overflow, image HTTP 200, 95% → 19×, and 99% → 99× without clipping. The final image/crop checkpoint is commit [`159ba2d`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-mukulsharma0260-alt/commit/159ba2d).
