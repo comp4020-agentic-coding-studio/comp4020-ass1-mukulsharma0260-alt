@@ -347,6 +347,7 @@ input[type="range"]:focus-visible {
     bottom: 6.5rem;
     left: 4rem;
     max-width: 30rem;
+    width: min(30rem, 40vw);
   }
 
   .insight {
