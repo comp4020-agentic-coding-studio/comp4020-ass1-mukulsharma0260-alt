@@ -8,14 +8,14 @@
   --color-backdrop-fallback: #1c120a;
   --scrim-edge: linear-gradient(
     90deg,
-    rgb(20 12 6 / 82%) 0%,
-    rgb(20 12 6 / 45%) 40%,
-    rgb(20 12 6 / 0%) 68%
+    rgb(20 12 6 / 90%) 0%,
+    rgb(20 12 6 / 58%) 40%,
+    rgb(20 12 6 / 0%) 72%
   );
   --scrim-depth: linear-gradient(
     180deg,
     rgb(20 12 6 / 0%) 55%,
-    rgb(20 12 6 / 75%) 100%
+    rgb(20 12 6 / 84%) 100%
   );
 }
 
@@ -202,6 +202,7 @@ nav a:focus-visible {
   font-family: Georgia, "Iowan Old Style", Cambria, serif;
   line-height: 1;
   color: var(--color-paper);
+  text-shadow: 0 1px 3px rgb(20 12 6 / 65%);
 }
 
 .metric-demand {
@@ -247,6 +248,11 @@ nav a:focus-visible {
   color: var(--color-warning);
 }
 
+.scene.pressure-critical .metric-wait,
+.scene.pressure-near-full .metric-wait {
+  color: #ff6a3d;
+}
+
 .scene.pressure-critical .metric-demand,
 .scene.pressure-near-full .metric-demand {
   font-size: clamp(1rem, 2.2vw, 1.4rem);
@@ -286,8 +292,9 @@ input[type="range"]:focus-visible {
   max-width: 26rem;
   margin: 0;
   font-size: 0.8rem;
-  opacity: 0.7;
+  opacity: 0.85;
   color: var(--color-paper);
+  text-shadow: 0 1px 2px rgb(20 12 6 / 60%);
 }
 
 .model-note {
