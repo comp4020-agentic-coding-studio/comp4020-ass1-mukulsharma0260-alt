@@ -218,3 +218,15 @@ says about the developer you're becoming.
 - Do not modify course-provided invariant tests to make implementation pass.
 - Run the relevant checks before declaring a stage complete.
 - Do not silently broaden scope.
+
+### Safe recovery after malformed agent edits
+
+- If an agent produces a malformed or risky large edit, do not repeatedly
+  accept variants of the same broken edit.
+- Stage risky rewrites in a temporary file first when appropriate.
+- Before copying staged work into src/, verify expected selectors/IDs and
+  ensure obsolete and replacement versions are not both present.
+- Run focused syntax/style checks and the relevant tests before accepting the
+  recovered version.
+- When a failure reveals a reusable process lesson, update CLAUDE.md before
+  continuing.
