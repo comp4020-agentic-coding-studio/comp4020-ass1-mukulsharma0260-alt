@@ -317,7 +317,7 @@ input[type="range"]:focus-visible {
 
 @media (width <= 600px) {
   .scene-backdrop {
-    background-position: right center;
+    background-position: 25% center;
   }
 }
 
